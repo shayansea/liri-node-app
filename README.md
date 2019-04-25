@@ -1,6 +1,6 @@
 # Liri Bot 
 
-## Screenshots of gameplay
+## Screenshot of error ()
 
 
 ![image](/image1.png)
