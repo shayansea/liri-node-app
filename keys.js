@@ -6,4 +6,3 @@ exports.spotify = {
   secret: process.env.SPOTIFY_SECRET
 };
 
-var spotify = new Spotify(keys.spotify);
