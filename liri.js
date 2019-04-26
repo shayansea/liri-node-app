@@ -7,6 +7,10 @@ var axios = require("axios");
 var moment = require("moment");
 var fs = require("fs");
 
+
+// define inquirer
+var inquirer = require("inquirer");
+
 // Grab command line arguements from Node
 var cmd = process.argv[3];
 var option = process.argv[2];
@@ -76,9 +80,7 @@ function movieThis(movieName) {
     // Creating an axios request to the queryUrl for OMDB API
     axios.get(queryUrl).then(
         function (response) {
-            if (!movieName) {
-                movieName = "Mr. Nobody";
-            }
+           
             console.log("\n_Movie Info_" + "\nTitle: " + response.data.Title + "\nRelease Year: " + response.data.Year + "\nRating: " + response.data.Rated + "\nRelease Country: " + response.data.Country + "\nLanguage: " + response.data.Language + "\nPlot: " + response.data.Plot + "\nActors: " + response.data.Actors);
         }
     );
