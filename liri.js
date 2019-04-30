@@ -1,97 +1,147 @@
-
 require("dotenv").config();
-// Require keys from keys.js, node-spotify-api, axios, and moment npms to be installed
 var keys = require("./keys.js");
 var Spotify = require('node-spotify-api');
+var spotify = new Spotify(keys.spotify);
 var axios = require("axios");
+var inquirer = require("inquirer");
 var moment = require("moment");
 var fs = require("fs");
+const chalk = require('chalk');
 
 
-// define inquirer
-var inquirer = require("inquirer");
+function liri() {
 
-// Grab command line arguements from Node
-var cmd = process.argv[3];
-var option = process.argv[2];
-// Store all arguements
-var query = process.argv;
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Tell Liri what you would you like to do!",
+        choices: ["Liri look up concert!", "Liri look up song!", "Liri look up movie!", "Liri Spotify a random song!", "Goodbye Liri :)"],
+        name: "actions"
+      }
 
-var spotify = new Spotify(keys.spotify);
-
-var userSubject = process.argv.slice(3).join(" ");
-console.log(userSubject)
-
-// Switch cases that tests for user input and will know which function to call based on user input
-switch (option) {
-    case "movie-this":
-        movieThis(userSubject);
-        break;
-    case "spotify-this-song":
-        spotifyCall(userSubject);
-        break;
-    case "concert-this":
-        concertThis(userSubject);
-        break;
-    case "do-what-it-says":
-        readFile(userSubject);
-        break;
-    default:
-        console.log(
-            "Only 'movie-this', 'concert-this', 'spotify-this-song', or 'do-what-it-says' pls, I don't speak any other languages. Thx. "
-        );
-}
-
-// Function for the Bands In Town API
-function concertThis(artist) {
-    var bandsQueryUrl = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
-    // Creating an axios request to the queryUrl for Bands In Town API
-    // Which then console logs upcoming events and the artist name, venue, location, and date of upcoming concert
-    axios.get(bandsQueryUrl).then(
-        function (response) {
-            console.log("Upcoming Events!");
-            console.log("Artist: " + artist + "\nVenue: " + response.data[0].venue.name + "\nLocation: " + response.data[0].venue.country + "\nDate: " + response.data[0].datetime);
+    ])
+    .then(function (res) {
+      if (res.actions === "Liri look up concert!") {
+        inquirer.prompt([
+          {
+            type: "input",
+            message: "Name an artist you'd like to see in concert :)",
+            name: "name"
+          }
+        ]).then(function (artist) {
+          if (!artist.name) {
+            console.log(chalk.blue("=============================================="));
+            console.log(chalk.cyan("You didn't type an artist :("))
+            console.log(chalk.cyan("Try Again! From the beginning."))
+            console.log(chalk.blue("=============================================="));
+            liri()
+          }
+          else {
+            concertSearch(artist.name);
+          }
         });
-}
-// Function to get song from Spotify API
-// If error return error; otherwise, console log the Artist name, song name, Spotify preview link, and album name
-function spotifyCall(songName) {
-    spotify.search({ type: 'artist,track', query: songName }, function (err, data) {
-        if (err) {
+      }
+
+      if (res.actions === "Liri look up song!") {
+        inquirer.prompt([
+          {
+            type: "input",
+            message: "Give me a song :)",
+            name: "name"
+          }
+        ]).then(function (song) {
+          if (!song.name) {
+            console.log(chalk.blue("=============================================="));
+            console.log(chalk.cyan("You didn't pick a song, so I picked one for you! You're welcome."))
+            spotifySearch("YMCA");
+          }
+          else {
+            spotifySearch(song.name);
+          }
+        });
+      }
+
+      if (res.actions === "Liri look up movie!") {
+        inquirer.prompt([
+          {
+            type: "input",
+            message: "What Movie would you like to look up?",
+            name: "name"
+          }
+        ]).then(function (movie) {
+          if (!movie.name) {
+            console.log(chalk.blue("=============================================="));
+            console.log(chalk.cyan("You didn't type a movie :("))
+            console.log(chalk.cyan("So one will be suggested to you: Mr. Nobody"))
+            movieSearch("Mr. Nobody")
+          }
+          else {
+            movieSearch(movie.name)
+          }
+
+        })
+      }
+      if (res.actions === "Liri Spotify a random song!") {
+        fs.readFile("random.txt", "utf8", function (err, data) {
+          if (err) {
             return console.log('Error occurred: ' + err);
-        }
-        console.log("Artist: " + data.tracks.items[0].album.artists[0].name);
-        console.log("Song: " + data.tracks.items[0].name);
-        console.log("Preview link of the song from Spotify: " + data.tracks.items[0].external_urls.spotify);
-        console.log("The album that the song is from: " + data.tracks.items[0].album.name);
+          }
+          var dataArr = data.split(",");
+          var randomSong = dataArr[Math.floor(Math.random() * (dataArr.length - 1))]
+          console.log(chalk.blue("=============================================="));
+          console.log(chalk.cyan("You have been recommended a song at random! :)"))
+          spotifySearch(randomSong)
+        })
+      }
+      if (res.actions === "Goodbye Liri :)") {
+        console.log(chalk.blue("=============================================="));
+        console.log(chalk.cyan("Goodbye Human! Have a fantastic day :)"))
+        console.log(chalk.blue("=============================================="));
+      }
     });
 }
 
-// Function for OMDB API
+liri()
 
-function movieThis(movieName) {
-    // If movie name is not entered by user, then by default the information for Mr. Nobody will be pulled
-    // Otherwise, by way of an axios request, it will console.log the Title, Release Year, Rating, Rating, Release Country, Plot, Language, and Actors
-    if (!movieName) {
-        movieName = "Mr. Nobody";
+function concertSearch(artist) {
+  var queryUrl = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
+  axios.get(queryUrl).then(
+    function (response) {
+      // console.log(response.data[0]);
+      console.log(chalk.blue("=============================================="));
+      console.log(chalk.magenta("Venue Name: " + response.data[0].venue.name + "\n" + "Location: " + response.data[0].venue.city + ", " + response.data[0].venue.region + response.data[0].venue.country
+        + "\n" + "Event Date: " + moment(response.data[0].datetime).format("MM/DD/YYYY")))
+      console.log(chalk.blue("=============================================="));
+      liri()
+    })
+}
+
+function spotifySearch(song) {
+  console.log("spotifySearch", song);
+  spotify.search({ type: 'track', query: song }, function (err, data) {
+    console.log(data.tracks);
+    var info = data.tracks.items[0]
+    if (err) {
+      return console.log('Error occurred: ' + err);
     }
-    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
-
-    // Creating an axios request to the queryUrl for OMDB API
-    axios.get(queryUrl).then(
-        function (response) {
-           
-            console.log("\n_Movie Info_" + "\nTitle: " + response.data.Title + "\nRelease Year: " + response.data.Year + "\nRating: " + response.data.Rated + "\nRelease Country: " + response.data.Country + "\nLanguage: " + response.data.Language + "\nPlot: " + response.data.Plot + "\nActors: " + response.data.Actors);
-        }
-    );
+    console.log(chalk.blue("=============================================="));
+    console.log(chalk.magenta(info.artists[0].name + "\n" + info.name + "\n" + "Check out a preview of the song: " +
+      info.external_urls.spotify + "\n" + "Album Name: " + info.album.name));
+    console.log(chalk.blue("=============================================="));
+    liri()
+  })
 }
 
-// Function to call "random.txt for 'do-what-it-says'
-// Need to complete this function so that it calls on whatever is typed into text and runs that function to either show Spotify, Bands In Town, or OMDB results
-function readFile() {
-    fs.readFile("./random.txt", "utf-8", function (error, data) {
-        if (error) {
-            return console.log("error");
-        }
-    });
+function movieSearch(movie) {
+  var queryUrls = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy";
+  axios.get(queryUrls).then(
+    function (response) {
+      console.log(chalk.blue("=============================================="));
+      console.log(chalk.magenta("Title: " + response.data.Title + "\n" + "Year: " + response.data.Year + "\n" + "Rating: " + response.data.Rated + "\n" +
+        "Rotten Tomatoes Rating: " + response.data.Ratings[1].Value + "\n" + "Country Movie was Produced: " + response.data.Country + "\n" +
+        "Languages: " + response.data.Language + "\n" + "Plot: " + response.data.Plot + "\n" + "Actors: " + response.data.Actors))
+      console.log(chalk.blue("=============================================="));
+      liri()
+    })
 }

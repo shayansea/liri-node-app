@@ -2,8 +2,11 @@
 
 ## Screenshot of error ()
 
-
+first try errors
 ![image](/image1.png)
+
+working liri bot:
+![image](/image2.png)
 
 
 ## tech used
@@ -14,7 +17,8 @@
 
 
 ## 
-Need to review this. not sure how to make options show up.
+Created a Liri function that lists out different choices - each choice runs it's own function to retreive specific data from the Spotify API. 
+
 
 # Author
 * Shayan Anoushiravani

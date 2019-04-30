@@ -16,5 +16,14 @@
   "bugs": {
     "url": "https://github.com/shayansea/liri-node-app/issues"
   },
-  "homepage": "https://github.com/shayansea/liri-node-app#readme"
+  "homepage": "https://github.com/shayansea/liri-node-app#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "chalk": "^2.4.2",
+    "dotenv": "^7.0.0",
+    "fs": "0.0.1-security",
+    "inquirer": "^6.3.1",
+    "moment": "^2.24.0",
+    "node-spotify-api": "^1.1.1"
+  }
 }
